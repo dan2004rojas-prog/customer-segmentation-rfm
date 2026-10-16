@@ -10,21 +10,21 @@ End-to-end pipeline that downloads the **Olist Brazilian E-Commerce** dataset fr
 
 ```
 customer-segmentation-rfm/
-├── .env                    # Environment variables (never commit)
+├── .env                    
 ├── .env.example
 ├── .gitignore
 ├── requirements.txt
-├── config.py               # Loads .env via python-dotenv
-├── main.py                 # Pipeline orchestrator
-├── data/                   # Auto-populated by kagglehub on first run
+├── config.py               
+├── main.py                 
+├── data/                   
 │   └── .gitkeep
 ├── sql/
-│   └── rfm_query.sql       # Reference SQL for RFM logic
+│   └── rfm_query.sql      
 ├── src/
-│   ├── data_loader.py      # Kaggle download + RFM builder + synthetic fallback
-│   ├── rfm_processing.py   # Data cleaning and RFM scoring
-│   └── ml_model.py         # Feature engineering, KMeans, plots
-└── outputs/                # Generated CSV and PNG files (auto-created)
+│   ├── data_loader.py      
+│   ├── rfm_processing.py   
+│   └── ml_model.py         
+└── outputs/                
 ```
 
 ---
