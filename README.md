@@ -114,7 +114,7 @@ python main.py
 ## Git Setup & Push to GitHub
 
 ```bash
-cd "C:/Users/Daniel/Documents/DATA SCIENCE/customer-segmentation-rfm"
+cd "C:///"
 git init
 git status
 git add .
