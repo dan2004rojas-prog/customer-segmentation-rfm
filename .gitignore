@@ -21,4 +21,3 @@ data/*.csv
 data/*.xlsx
 data/*.zip
 !data/.gitkeep
-outputs/
