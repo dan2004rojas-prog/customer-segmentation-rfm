@@ -48,7 +48,7 @@ customer-segmentation-rfm/
 Download your API token from [kaggle.com → Settings → API](https://www.kaggle.com/settings) and place it at:
 
 ```
-C:\Users\Daniel\.kaggle\kaggle.json
+C:\Users\TuUsuario\.kaggle\kaggle.json
 ```
 
 ### 2. Create and activate virtual environment
