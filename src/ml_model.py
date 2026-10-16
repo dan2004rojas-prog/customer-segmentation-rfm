@@ -1,3 +1,5 @@
+import os
+from typing import Sequence
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -5,9 +7,10 @@ import seaborn as sns
 from sklearn.preprocessing import StandardScaler
 from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
+from sklearn.decomposition import PCA
 
 
-def prepare_features(df: pd.DataFrame) -> np.ndarray:
+def prepare_features(df: pd.DataFrame) -> tuple[np.ndarray, StandardScaler]:
     features = df[["recency_days", "frequency", "monetary"]].copy()
     features["recency_days"] = np.log1p(features["recency_days"])
     features["frequency"] = np.log1p(features["frequency"])
@@ -19,7 +22,7 @@ def prepare_features(df: pd.DataFrame) -> np.ndarray:
 
 def find_optimal_k(
     scaled_features: np.ndarray,
-    k_range: range = range(2, 11),
+    k_range: Sequence[int] = range(2, 11),
     silhouette_sample: int = 5000,
 ) -> dict:
     wcss = []
@@ -43,8 +46,7 @@ def find_optimal_k(
 
 
 def plot_elbow_silhouette(metrics: dict, output_path: str = "outputs/elbow_silhouette.png"):
-    import os
-    os.makedirs("outputs", exist_ok=True)
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
 
     fig, axes = plt.subplots(1, 2, figsize=(14, 5))
 
@@ -69,15 +71,14 @@ def train_kmeans(scaled_features: np.ndarray, n_clusters: int = 4) -> KMeans:
     return km
 
 
-def assign_clusters(df: pd.DataFrame, km: KMeans, scaled_features: np.ndarray) -> pd.DataFrame:
+def assign_clusters(df: pd.DataFrame, km: KMeans, scaled_features: np.ndarray | None = None) -> pd.DataFrame:
     df = df.copy()
     df["cluster"] = km.labels_
     return df
 
 
 def plot_cluster_profiles(df: pd.DataFrame, output_path: str = "outputs/cluster_profiles.png"):
-    import os
-    os.makedirs("outputs", exist_ok=True)
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
 
     profile = df.groupby("cluster")[["recency_days", "frequency", "monetary"]].mean().reset_index()
 
@@ -91,6 +92,45 @@ def plot_cluster_profiles(df: pd.DataFrame, output_path: str = "outputs/cluster_
         axes[i].set_xlabel("Cluster")
         axes[i].set_ylabel("Mean Value")
 
+    plt.tight_layout()
+    plt.savefig(output_path, dpi=150)
+    plt.close()
+
+
+def plot_pca_clusters(
+    df: pd.DataFrame,
+    scaled_features: np.ndarray,
+    output_path: str = "outputs/pca_clusters.png",
+):
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+
+    pca = PCA(n_components=2, random_state=42)
+    coords = pca.fit_transform(scaled_features)
+
+    label_col = "segment" if "segment" in df.columns else "cluster"
+    segments = df[label_col].astype(str).values
+    unique_segs = sorted(set(segments))
+    palette = sns.color_palette("husl", len(unique_segs))
+    color_map = {s: palette[i] for i, s in enumerate(unique_segs)}
+
+    fig, ax = plt.subplots(figsize=(10, 7))
+    for seg in unique_segs:
+        idx = segments == seg
+        ax.scatter(
+            coords[idx, 0],
+            coords[idx, 1],
+            c=[color_map[seg]],
+            label=seg,
+            alpha=0.6,
+            s=18,
+            edgecolors="none",
+        )
+
+    var_explained = pca.explained_variance_ratio_ * 100
+    ax.set_xlabel(f"PC1 ({var_explained[0]:.1f}% variance)")
+    ax.set_ylabel(f"PC2 ({var_explained[1]:.1f}% variance)")
+    ax.set_title("Customer Segments — PCA 2D Projection")
+    ax.legend(title="Segment", bbox_to_anchor=(1.02, 1), loc="upper left", fontsize=9)
     plt.tight_layout()
     plt.savefig(output_path, dpi=150)
     plt.close()

@@ -25,3 +25,33 @@ def score_rfm(df: pd.DataFrame, quantiles: int = 5) -> pd.DataFrame:
         + df["m_score"].astype(int)
     )
     return df
+
+
+def assign_segment_labels(df: pd.DataFrame) -> pd.DataFrame:
+    df = df.copy()
+    profile = df.groupby("cluster")[["recency_days", "frequency", "monetary"]].mean()
+
+    r_med = profile["recency_days"].median()
+    f_med = profile["frequency"].median()
+    m_med = profile["monetary"].median()
+
+    def label(row):
+        r, f, m = row["recency_days"], row["frequency"], row["monetary"]
+        if r <= r_med and f >= f_med and m >= m_med:
+            return "Champions"
+        elif r <= r_med and f >= f_med and m < m_med:
+            return "Loyal Customers"
+        elif r <= r_med and f < f_med and m >= m_med:
+            return "Potential Loyalists"
+        elif r > r_med and f >= f_med and m >= m_med:
+            return "At Risk"
+        elif r > r_med and f >= f_med and m < m_med:
+            return "Need Attention"
+        elif r > r_med and f < f_med and m >= m_med:
+            return "Cant Lose Them"
+        else:
+            return "Hibernating"
+
+    cluster_labels = profile.apply(label, axis=1).to_dict()
+    df["segment"] = df["cluster"].map(cluster_labels)
+    return df
